@@ -15,6 +15,7 @@
     "WorldGetPendingBlockUpdatesMixin",
     "WorldMixin",
     "WorldScheduleIndexMixin",
-    "WorldScheduleInvalidateMixin"
+    "WorldScheduleInvalidateMixin",
+    "WorldServerTickMixin"
   ]
 }

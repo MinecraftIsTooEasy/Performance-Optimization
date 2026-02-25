@@ -1,6 +1,7 @@
 package com.inf1nlty.perfopt.mixin;
 
 import com.inf1nlty.perfopt.PendingBlockUpdateCache;
+import com.inf1nlty.perfopt.PrecipitationHeightCache;
 import net.minecraft.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,5 +20,8 @@ public class WorldScheduleInvalidateMixin {
         int chunkZ = z >> 4;
 
         PendingBlockUpdateCache.invalidateChunk(self, chunkX, chunkZ);
+
+        // 方块变化可能影响降水高度缓存，同步失效该列
+        PrecipitationHeightCache.invalidateColumn(self, x, z);
     }
 }

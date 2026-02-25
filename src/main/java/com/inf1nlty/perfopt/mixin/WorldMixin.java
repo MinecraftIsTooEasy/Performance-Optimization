@@ -1,6 +1,7 @@
 package com.inf1nlty.perfopt.mixin;
 
 import com.inf1nlty.perfopt.WorldActivityCache;
+import com.inf1nlty.perfopt.PrecipitationHeightCache;
 import com.inf1nlty.perfopt.RelightLimiter;
 import net.minecraft.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,5 +24,8 @@ public class WorldMixin {
         WorldActivityCache.rebuildForWorld(self, ACTIVE_RANGE_BLOCKS);
 
         RelightLimiter.resetForWorld(self);
+
+        // 每 tick 刷新降水高度缓存，确保下一 tick 数据新鲜
+        PrecipitationHeightCache.flushForWorld(self);
     }
 }

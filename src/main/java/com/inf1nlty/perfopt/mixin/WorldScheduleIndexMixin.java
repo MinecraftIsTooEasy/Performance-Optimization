@@ -13,25 +13,31 @@ import java.util.Set;
 @SuppressWarnings("unchecked,rawtypes")
 public class WorldScheduleIndexMixin {
 
-    @Redirect(method = "scheduleBlockUpdateWithPriority(IIIIII)V",
-            at = @At(value = "INVOKE", target = "Ljava/util/Set;add(Ljava/lang/Object;)Z"))
-    private boolean onSetAdd_schedule(Set set, Object entry) {
+    @Redirect(method = "scheduleBlockUpdateWithPriority(IIIIII)V", at = @At(value = "INVOKE", target = "Ljava/util/Set;add(Ljava/lang/Object;)Z"))
+    private boolean onSetAdd_schedule(Set set, Object entry)
+    {
         boolean res = set.add(entry);
-        if (res && entry instanceof NextTickListEntry listEntry) {
+
+        if (res && entry instanceof NextTickListEntry listEntry)
+        {
             WorldServer self = (WorldServer) (Object) this;
             PendingBlockUpdateIndex.addToBucket(self, listEntry.xCoord >> 4, listEntry.zCoord >> 4, listEntry);
         }
+
         return res;
     }
 
-    @Redirect(method = "scheduleBlockUpdateFromLoad(IIIIII)V",
-            at = @At(value = "INVOKE", target = "Ljava/util/Set;add(Ljava/lang/Object;)Z"))
-    private boolean onSetAdd_fromLoad(Set set, Object entry) {
+    @Redirect(method = "scheduleBlockUpdateFromLoad(IIIIII)V", at = @At(value = "INVOKE", target = "Ljava/util/Set;add(Ljava/lang/Object;)Z"))
+    private boolean onSetAdd_fromLoad(Set set, Object entry)
+    {
         boolean res = set.add(entry);
-        if (res && entry instanceof NextTickListEntry listEntry) {
+
+        if (res && entry instanceof NextTickListEntry listEntry)
+        {
             WorldServer self = (WorldServer) (Object) this;
             PendingBlockUpdateIndex.addToBucket(self, listEntry.xCoord >> 4, listEntry.zCoord >> 4, listEntry);
         }
+
         return res;
     }
 }
