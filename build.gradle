@@ -1,0 +1,89 @@
+plugins {
+    id 'fml-loom' version '0.1'
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = "[服务端模组性能优化]" + project.archives_base_name
+}
+
+repositories {
+    maven {
+        name = "ModdedMITE"
+        url = uri("https://maven.limingzxc.top/repository/maven-public/")
+    }
+}
+
+configurations {
+    fml
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    fml "com.github.MinecraftIsTooEasy:FishModLoader:3.4.2"
+    implementation "com.github.MinecraftIsTooEasy:FishModLoader:3.4.2"
+}
+
+def fmlResolvedFile = configurations.fml.files.iterator().next()
+
+loom {
+//    accessWidenerPath = file("src/main/resources/perfopt.accessWidener")
+    mergedMinecraftJar()
+
+    mods {
+        "Performance Optimization" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+loom.setFML(fmlResolvedFile)
+dependencies.add("mappings", loom.fmlMCPMappings())
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("fml.mod.json") {
+        expand "version": project.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 17
+}
+
+java {
+    withSourcesJar()
+
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+jar {
+}
+
+tasks.named('runClient', JavaExec).configure { exec ->
+    def user = project.hasProperty('username') ? project.username : 'Dev'
+    exec.setArgs(['--username', user, '--session', '0', '--width', '854', '--height', '480'])
+}
+
+// configure the maven publication
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+
+    repositories {
+        // Add repositories to publish to here.
+        // Notice: This block does NOT have the same function as the block in the top level.
+        // The repositories here will be used for publishing your artifact, not for
+        // retrieving dependencies.
+    }
+}
