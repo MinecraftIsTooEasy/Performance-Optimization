@@ -6,11 +6,26 @@ plugins {
 version = project.mod_version
 group = project.maven_group
 
+def useLocalizedArchiveName = Locale.default.country.equalsIgnoreCase("CN")
+
 base {
-    archivesName = "[服务端模组性能优化]" + project.archives_base_name
+    // Prefix local JAR names with an optional alias, for example: "[Alias]" + archives_base_name.
+    // Maven publishing keeps using the lowercase maven_id configured below.
+    archivesName = useLocalizedArchiveName
+            ? "[服务端模组性能优化]${project.archives_base_name}"
+            : project.archives_base_name
 }
 
 repositories {
+    // Add repositories to retrieve artifacts from in here.
+    // Only declare repositories required by this project because Loom provides
+    // the repositories needed for Minecraft and its libraries automatically.
+    // See https://docs.gradle.org/current/userguide/declaring_repositories.html
+    // for more information about repository declarations.
+    maven {
+        name = "Spongepowered"
+        url = "https://repo.spongepowered.org/repository/maven-public/"
+    }
     maven {
         name = "ModdedMITE"
         url = uri("https://maven.limingzxc.top/repository/maven-public/")
@@ -22,6 +37,9 @@ configurations {
 }
 
 dependencies {
+    // Dependency versions are maintained in gradle.properties or alongside project-specific declarations below.
+    // Use implementation for required mods, compileOnly for optional integrations,
+    // and localRuntime for mods needed only in the development environment.
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
@@ -29,35 +47,54 @@ dependencies {
     implementation "com.github.MinecraftIsTooEasy:FishModLoader:3.4.2"
 }
 
-def fmlResolvedFile = configurations.fml.files.iterator().next()
+def fmlResolvedFile = configurations.fml.singleFile
 
 loom {
 //    accessWidenerPath = file("src/main/resources/perfopt.accessWidener")
     mergedMinecraftJar()
+    setFML(fmlResolvedFile)
+    dependencies.add("mappings", fmlMCPMappings())
 
     mods {
-        "Performance Optimization" {
+        "perfopt" {
             sourceSet sourceSets.main
+//            sourceSet sourceSets.client
+//            sourceSet sourceSets.server
+//            For modules in the 'src' directory, only the main source set is required by default.
         }
+    }
+    runs {
+        client {
+            String name = project.username
+            String width = project.screen_width
+            String height = project.screen_height
+            programArgs "--userProperties", "{}", "--username", name, "--session", "a.a.a.a", "--width", width, "--height", height
+        }
+//        server {
+//            programArgs "--", ""
+//        }
     }
 }
 
-loom.setFML(fmlResolvedFile)
-dependencies.add("mappings", loom.fmlMCPMappings())
-
 processResources {
-    inputs.property "version", project.version
+    inputs.properties(
+            version: project.version,
+            id: project.mod_id,
+            name: project.mod_name
+    )
 
     filesMatching("fml.mod.json") {
-        expand "version": project.version
+        expand(inputs.properties)
     }
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.release = 17
+    options.release = 17
 }
 
 java {
+    // Loom automatically attaches sourcesJar to remapSourcesJar and the build lifecycle when it is present.
+    // Remove this line only when source artifacts should not be generated.
     withSourcesJar()
 
     sourceCompatibility = JavaVersion.VERSION_17
@@ -67,16 +104,12 @@ java {
 jar {
 }
 
-tasks.named('runClient', JavaExec).configure { exec ->
-    def user = project.hasProperty('username') ? project.username : 'Dev'
-    exec.setArgs(['--username', user, '--session', '0', '--width', '854', '--height', '480'])
-}
-
-// configure the maven publication
+// Configure the Maven publication.
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            from components.java
+        create("mavenJava", MavenPublication) {
+            artifactId = project.maven_id
+            from(components.java)
         }
     }
 

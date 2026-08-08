@@ -17,5 +17,8 @@
     "WorldScheduleIndexMixin",
     "WorldScheduleInvalidateMixin",
     "WorldServerTickMixin"
-  ]
+  ],
+  "overwrites": {
+    "requireAnnotations": true
+  }
 }
